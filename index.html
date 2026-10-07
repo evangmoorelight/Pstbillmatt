@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pastor Billmatt Digital Library</title>
+<meta name="description" content="Listen to and download Pastor Billmatt's sermons for free.">
+<meta name="theme-color" content="#053065">
+<link rel="icon" href="logo.jpg">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--navy:#053065;--blue:#1659c9;--link:#1659c9;--sky:#e8f0fc;--white:#fff;--ink:#0c2247;--mute:#5d6f90;--line:#d5e1f5;--pbg:#053065;--pbd:transparent}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--blue:#2b64d6;--link:#8bb6ff;--sky:#14223f;--white:#0a1428;--ink:#e8eefb;--mute:#9fb0d2;--line:#1f3157;--pbg:#0f2a57;--pbd:rgba(255,255,255,.14)}}
+:root[data-theme=dark]{--blue:#2b64d6;--link:#8bb6ff;--sky:#14223f;--white:#0a1428;--ink:#e8eefb;--mute:#9fb0d2;--line:#1f3157;--pbg:#0f2a57;--pbd:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--white);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(var(--dock,76px) + 200px)}
+button{font:inherit;cursor:pointer;color:inherit}
+.wrap{max-width:760px;margin:0 auto}
+
+/* hero: logo sits in the middle */
+header{background:var(--navy);color:#fff;text-align:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px 56px;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:34px;background:var(--white);border-radius:34px 34px 0 0}
+.logo{width:min(300px,72vw);height:auto;display:block;margin:0 auto}
+header p{margin:0 auto;max-width:28em;color:#cfdcf5}
+#notify{margin:16px auto 0;background:#fff;color:var(--navy);border:0;border-radius:999px;padding:9px 18px;font-weight:700;font-size:.92rem}
+#notify[hidden]{display:none}
+.themebtn{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:7px 14px;font-weight:600;font-size:.85rem}
+.sw{position:relative;flex:1;min-width:0}
+.sw input{width:100%;padding-right:40px}
+#clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--mute);font-size:1rem}
+#clear[hidden]{display:none}
+
+/* watermark */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url(watermark.png) center 58%/min(78vw,520px) no-repeat;opacity:.09}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) body::before{opacity:.16;filter:brightness(1.8)}}
+:root[data-theme=dark] body::before{opacity:.16;filter:brightness(1.8)}
+
+/* bottom dock */
+#dock{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--white);border-top:1px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px))}
+#dock .in{display:flex;gap:6px;max-width:560px;margin:0 auto}
+.qb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--mute);font-size:.72rem;font-weight:600;padding:5px 0;border-radius:14px}
+.qb .ic{display:grid;place-items:center;width:52px;height:30px;border-radius:15px}
+.qb:active .ic,.qb:hover .ic{background:var(--sky);color:var(--link)}
+svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.foldbtn{display:flex;align-items:center;gap:3px;background:var(--sky);color:var(--link);border:0;border-radius:999px;padding:8px 12px 8px 8px;font-weight:700;font-size:.82rem}
+.foldbtn svg.i{width:18px;height:18px}
+main.fold{display:none}
+
+/* sheets */
+dialog{border:0;border-radius:22px;padding:0;width:min(560px,calc(100vw - 24px));max-height:86vh;background:var(--white);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(5,20,50,.62)}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.sh h2{margin:0;font-size:1.1rem}
+.sh button{border:0;background:var(--sky);width:34px;height:34px;border-radius:50%;color:var(--ink)}
+.sb{padding:16px 18px 20px;overflow:auto;max-height:calc(86vh - 66px)}
+.pbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 16px;border-radius:14px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;border:0;margin-top:10px}
+.abt{display:block;width:150px;height:150px;border-radius:24px;margin:0 auto 14px;object-fit:cover}
+.sb p{font-size:1.02rem;line-height:1.65;margin:0 0 12px}
+.cf{display:grid;gap:10px;margin-bottom:6px}
+.cf input,.cf textarea{font:inherit;padding:11px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--sky);color:var(--ink);width:100%;resize:vertical}
+.cm{padding:12px 0;border-top:1px solid var(--line)}
+.cm p{margin:4px 0 0;font-size:.98rem}
+.cm small,.note{color:var(--mute)}
+.note{font-size:.85rem}
+
+/* new sermon banner */
+#banner{display:none;background:var(--blue);color:#fff;padding:12px 20px}
+#banner.show{display:block}
+#banner .wrap{display:flex;gap:12px;align-items:center;justify-content:space-between}
+#banner button{background:#fff;color:var(--blue);border:0;border-radius:8px;padding:7px 14px;font-weight:700}
+
+.tools{position:sticky;top:0;z-index:5;background:var(--white);padding:10px 20px 12px;border-bottom:1px solid var(--line)}
+.tools .wrap{display:flex;gap:10px;align-items:center}
+input[type=search]{-webkit-appearance:none;appearance:none;font:inherit;padding:11px 16px;border:1.5px solid var(--line);border-radius:999px;background:var(--sky);color:var(--ink)}
+#count{color:var(--mute);font-size:.85rem;white-space:nowrap}
+main{padding:6px 20px}
+
+.ep{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.cover{position:relative;flex:none;width:76px;height:76px;border-radius:14px;overflow:hidden;border:0;padding:0;background:var(--navy)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover span{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,48,101,.35);color:#fff;font-size:1.5rem}
+.ep.on .cover{outline:3px solid var(--link);outline-offset:2px}
+.body{min-width:0;flex:1}
+.t{font-weight:700;font-size:1.02rem;line-height:1.3;margin:0}
+.ep.on .t{color:var(--link)}
+.new{display:inline-block;background:var(--blue);color:#fff;font-size:.7rem;font-weight:700;border-radius:6px;padding:1px 7px;margin-right:6px;vertical-align:1px}
+.m{color:var(--mute);font-size:.85rem;margin-top:2px}
+.dl{margin-top:8px;background:var(--sky);color:var(--link);border:0;border-radius:8px;padding:7px 14px;font-weight:700;font-size:.85rem}
+.dl:disabled{opacity:.6}
+.msg{padding:40px 0;text-align:center;color:var(--mute)}
+.msg button{margin-top:12px;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:700}
+footer{text-align:center;color:var(--mute);font-size:.8rem;padding:24px 20px}
+
+/* player */
+#player{position:fixed;left:12px;right:12px;bottom:calc(var(--dock,76px) + 10px);max-width:736px;margin:0 auto;background:var(--pbg);border:1px solid var(--pbd);color:#fff;border-radius:22px;padding:14px 16px 12px;box-shadow:0 10px 30px rgba(5,48,101,.45);transform:translateY(160%);transition:transform .25s;z-index:10}
+#player.show{transform:none}
+#player.min{padding:10px 12px}
+#player.min .seek,#player.min .ctl{display:none}
+#player.min #pcover{width:40px;height:40px;border-radius:10px}
+#mpp{display:none;opacity:1}
+#player.min #mpp{display:block}
+#mbar{display:none;height:3px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:8px;overflow:hidden}
+#mbar i{display:block;height:100%;width:0;background:#fff}
+#player.min #mbar{display:block}
+.pt{display:flex;gap:12px;align-items:center}
+#pcover{width:52px;height:52px;border-radius:12px;object-fit:cover;flex:none;background:#0a3f85}
+#now{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt .x{flex:none;background:transparent;border:0;font-size:1.3rem;opacity:.75;padding:4px 8px}
+.seek{display:flex;gap:10px;align-items:center;margin:10px 0 4px;font-size:.78rem;color:#bcd0f2}
+.seek span{min-width:38px;text-align:center}
+input[type=range]{flex:1;accent-color:#fff;height:22px;margin:0}
+.ctl{display:flex;justify-content:center;align-items:center;gap:14px}
+.ctl button{background:transparent;border:0;padding:6px 10px;font-size:.88rem;font-weight:600;color:#dbe7fb;border-radius:10px}
+#pp{width:54px;height:54px;border-radius:50%;background:#fff;color:var(--navy);font-size:1.2rem;padding:0}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+#player :focus-visible{outline-color:#fff}
+@media(prefers-reduced-motion:reduce){#player{transition:none}}
+</style>
+</head>
+<body>
+<header><button class="themebtn" id="themebtn" aria-label="Switch between light and dark mode"></button><div class="wrap">
+  <img class="logo" src="logo.jpg" alt="Pastor Billmatt Digital Library">
+  <p>Listen to sermons here, or download them to your phone to hear later. Free for everyone.</p>
+  <button id="notify" hidden>Notify me of new sermons</button>
+</div></header>
+
+<div id="banner"><div class="wrap"><span id="bannerText"></span><button id="bannerBtn">Play</button></div></div>
+
+<div class="tools"><div class="wrap">
+  <div class="sw"><input type="search" id="q" placeholder="Search sermons by title, topic or date" aria-label="Search sermons"><button id="clear" aria-label="Clear search" hidden>✕</button></div>
+  <span id="count"></span>
+  <button class="foldbtn" id="fold" aria-expanded="true"></button>
+</div></div>
+
+<main id="main"><div class="wrap" id="list"><div class="msg">Loading sermons…</div></div></main>
+<footer>Pastor Billmatt Digital Library · Free to listen and share</footer>
+
+<div id="player" role="region" aria-label="Audio player">
+  <div class="pt"><img id="pcover" src="logo.jpg" alt=""><div id="now"></div><button class="x" id="mpp" aria-label="Play">▶</button><button class="x" id="mini" aria-label="Minimize player"></button><button class="x" id="close" aria-label="Close player">✕</button></div>
+  <div class="seek"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="100" value="0" step="0.1" aria-label="Seek"><span id="dur">0:00</span></div>
+  <div class="ctl">
+    <button id="speed" aria-label="Playback speed">1x</button>
+    <button id="back" aria-label="Back 15 seconds">⟲ 15</button>
+    <button id="pp" aria-label="Play">▶</button>
+    <button id="fwd" aria-label="Forward 15 seconds">15 ⟳</button>
+    <button id="pdl" aria-label="Download this sermon">Save</button>
+  </div>
+  <audio id="audio" preload="none"></audio>
+  <div id="mbar"><i></i></div>
+</div>
+
+<nav id="dock" aria-label="More"><div class="in">
+  <button class="qb" id="qAbout"><span class="ic"></span>About</button>
+  <button class="qb" id="qComm"><span class="ic"></span>Comments</button>
+  <button class="qb" id="qPart"><span class="ic"></span>Partner</button>
+</div></nav>
+
+<dialog id="sheet" aria-labelledby="shT">
+  <div class="sh"><h2 id="shT"></h2><button id="shX" aria-label="Close">✕</button></div>
+  <div class="sb" id="shB"></div>
+</dialog>
+
+<script>
+const FEED="https://anchor.fm/s/1183e0954/podcast/rss";
+const LOGO="logo.jpg";
+
+/* ---- EDIT THESE ---- */
+const ABOUT="Pastor Billmatt Osale shares messages of faith and encouragement. This digital library brings his sermons together in one place, so you can listen, download and share them for free, wherever you are.";
+const PARTNER={
+  text:"Partner with Pastor Billmatt Osale to keep these messages free and reaching more people. Get in touch to find out how you can support the work.",
+  whatsappNumber:"+234 808 669 0553",
+  whatsapp:"https://wa.me/2348086690553",  // leave "" to hide a button
+  email:"",      // e.g. "name@example.com"
+  give:""        // link to a giving or payment page
+};
+const DISQUS_SHORTNAME=""; // optional: your Disqus shortname makes comments visible to everyone
+/* -------------------- */
+const PROXIES=[u=>u,u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>"https://corsproxy.io/?"+encodeURIComponent(u)];
+const $=id=>document.getElementById(id);
+const a=$("audio");
+let eps=[],cur=-1,seen=null,newIds=new Set();
+
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* feed */
+function parse(xml){
+  const doc=new DOMParser().parseFromString(xml,"text/xml");
+  if(doc.querySelector("parsererror"))throw new Error("bad xml");
+  const chArt=(()=>{const n=[...doc.querySelectorAll("channel > *")].find(x=>x.nodeName==="itunes:image");return n?n.getAttribute("href"):""})();
+  return [...doc.querySelectorAll("item")].map(it=>{
+    const enc=it.querySelector("enclosure");
+    const g=t=>{const n=[...it.children].find(x=>x.nodeName===t);return n?n.textContent.trim():""};
+    const im=[...it.children].find(x=>x.nodeName==="itunes:image");
+    const d=document.createElement("div");d.innerHTML=g("description");
+    return{id:g("guid")||(enc&&enc.getAttribute("url")),title:g("title"),url:enc?enc.getAttribute("url"):"",date:new Date(g("pubDate")),dur:g("itunes:duration"),desc:(d.textContent||"").trim(),img:(im&&im.getAttribute("href"))||chArt||LOGO};
+  }).filter(e=>e.url);
+}
+async function fetchFeed(){
+  for(const p of PROXIES){
+    try{const r=await fetch(p(FEED),{cache:"no-store"});if(!r.ok)continue;const t=await r.text();if(t.includes("<item"))return t}catch(e){}
+  }
+  return null;
+}
+
+/* new sermon detection */
+function checkNew(list,first){
+  const ids=list.map(e=>e.id);
+  if(seen===null){seen=ids;store.set("seen",JSON.stringify(ids));return}  // first visit: nothing is "new"
+  const fresh=list.filter(e=>!seen.includes(e.id));
+  if(!fresh.length)return;
+  fresh.forEach(e=>newIds.add(e.id));
+  const msg=fresh.length===1?"New sermon: "+fresh[0].title:fresh.length+" new sermons added";
+  $("bannerText").textContent=msg;$("banner").classList.add("show");
+  $("bannerBtn").onclick=()=>{$("banner").classList.remove("show");play(eps.findIndex(x=>x.id===fresh[0].id))};
+  if(!first)notify(fresh[0].title,fresh.length);
+  seen=ids;store.set("seen",JSON.stringify(ids));
+}
+async function notify(title,n){
+  if(!("Notification" in window)||Notification.permission!=="granted")return;
+  const head=n>1?n+" new sermons":"New sermon",o={body:title,icon:"icon-192.png"};
+  try{
+    const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+    if(reg)await reg.showNotification(head,o);else new Notification(head,o);
+  }catch(e){}
+}
+function setupNotifyButton(){
+  const b=$("notify");
+  if(!("Notification" in window)||Notification.permission!=="default")return;
+  b.hidden=false;
+  b.onclick=async()=>{const r=await Notification.requestPermission();b.hidden=true;if(r==="granted")notify("You will be told when a new sermon is added.",1)};
+}
+
+async function load(first){
+  if(first)$("list").innerHTML='<div class="msg">Loading sermons…</div>';
+  const xml=await fetchFeed();
+  let list=[];
+  try{
+    if(xml){list=parse(xml);store.set("feed",xml)}
+    else if(first){const c=store.get("feed");if(c)list=parse(c)}
+  }catch(e){}
+  if(!list.length){
+    if(first&&!eps.length){$("list").innerHTML='<div class="msg">Sermons could not be loaded. Check your internet connection and try again.<br><button id="retry">Try again</button></div>';$("retry").onclick=()=>load(true);$("count").textContent=""}
+    return;
+  }
+  const changed=!eps.length||list[0].id!==eps[0].id||list.length!==eps.length;
+  const playingId=cur>-1?eps[cur].id:null;
+  eps=list;cur=playingId?eps.findIndex(e=>e.id===playingId):-1;
+  checkNew(eps,first);
+  if(changed)render();
+}
+
+/* list */
+const fmtDate=d=>isNaN(d)?"":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+const fmtDur=s=>{if(!s)return"";if(String(s).includes(":"))return String(s).replace(/^00:/,"");const n=+s;if(!n)return"";const h=Math.floor(n/3600),m=Math.floor(n%3600/60);return(h?h+" hr ":"")+m+" min"};
+function render(){
+  const q=$("q").value.trim().toLowerCase();
+  const words=q.split(/\s+/).filter(Boolean);
+  const list=eps.map((e,i)=>({e,i})).filter(({e})=>{const hay=(e.title+" "+e.desc+" "+fmtDate(e.date)).toLowerCase();return words.every(w=>hay.includes(w))});
+  $("clear").hidden=!q;
+  $("count").textContent=list.length+" of "+eps.length;
+  if(!list.length){$("list").innerHTML='<div class="msg">No sermons match your search. Try fewer words.</div>';return}
+  $("list").innerHTML="";
+  const playing=cur>-1&&!a.paused;
+  for(const {e,i} of list){
+    const row=document.createElement("div");row.className="ep"+(i===cur?" on":"");
+    row.innerHTML='<button class="cover"><img alt="" loading="lazy"><span></span></button><div class="body"><h2 class="t"></h2><div class="m"></div><button class="dl">Download</button></div>';
+    const img=row.querySelector("img");img.src=e.img;img.onerror=()=>{img.onerror=null;img.src=LOGO};
+    row.querySelector(".cover span").textContent=(i===cur&&playing)?"❚❚":"▶";
+    row.querySelector(".cover").setAttribute("aria-label",(i===cur&&playing?"Pause ":"Play ")+e.title);
+    row.querySelector(".cover").onclick=()=>play(i);
+    const t=row.querySelector(".t");
+    if(newIds.has(e.id)){const n=document.createElement("span");n.className="new";n.textContent="NEW";t.appendChild(n)}
+    t.appendChild(document.createTextNode(e.title));
+    row.querySelector(".m").textContent=[fmtDate(e.date),fmtDur(e.dur)].filter(Boolean).join(" · ");
+    row.querySelector(".dl").onclick=ev=>download(e,ev.target);
+    $("list").appendChild(row);
+  }
+}
+
+/* player */
+const mmss=s=>{if(!isFinite(s))return"0:00";s=Math.floor(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,"0");return h?h+":"+String(m).padStart(2,"0")+":"+x:m+":"+x};
+function play(i){
+  if(i<0||!eps[i])return;
+  if(i===cur){a.paused?a.play():a.pause();return}
+  cur=i;const e=eps[i];
+  a.src=e.url;a.play().catch(()=>{});
+  $("now").textContent=e.title;$("pcover").src=e.img;$("pcover").onerror=()=>{$("pcover").src=LOGO};
+  $("player").classList.add("show");
+  if("mediaSession" in navigator){
+    const ms=navigator.mediaSession;
+    ms.metadata=new MediaMetadata({title:e.title,artist:"Pastor Billmatt",album:"Pastor Billmatt Digital Library",artwork:[{src:e.img,sizes:"512x512"},{src:"icon-512.png",sizes:"512x512",type:"image/png"}]});
+    const set=(n,f)=>{try{ms.setActionHandler(n,f)}catch(x){}};
+    set("play",()=>a.play());set("pause",()=>a.pause());
+    set("seekbackward",()=>{a.currentTime=Math.max(0,a.currentTime-15)});
+    set("seekforward",()=>{a.currentTime=Math.min(a.duration||1e9,a.currentTime+15)});
+    set("seekto",d=>{if(d.seekTime!=null)a.currentTime=d.seekTime});
+    set("previoustrack",()=>{if(cur>0)play(cur-1)});
+    set("nexttrack",()=>{if(cur<eps.length-1)play(cur+1)});
+  }
+  render();
+}
+function sync(){
+  const p=!a.paused;
+  for(const id of ["pp","mpp"]){$(id).textContent=p?"❚❚":"▶";$(id).setAttribute("aria-label",p?"Pause":"Play")}
+  if("mediaSession" in navigator)navigator.mediaSession.playbackState=p?"playing":"paused";
+  render();
+}
+["play","pause","ended"].forEach(ev=>a.addEventListener(ev,sync));
+a.addEventListener("timeupdate",()=>{
+  $("cur").textContent=mmss(a.currentTime);
+  if(a.duration){
+    $("dur").textContent=mmss(a.duration);
+    const pc=a.currentTime/a.duration*100;
+    if(!seeking)$("seek").value=pc;
+    $("mbar").firstChild.style.width=pc+"%";
+    if("mediaSession" in navigator&&navigator.mediaSession.setPositionState)try{navigator.mediaSession.setPositionState({duration:a.duration,playbackRate:a.playbackRate,position:Math.min(a.currentTime,a.duration)})}catch(x){}
+  }
+});
+let seeking=false;
+$("seek").addEventListener("input",()=>{seeking=true;if(a.duration)$("cur").textContent=mmss($("seek").value/100*a.duration)});
+$("seek").addEventListener("change",()=>{if(a.duration)a.currentTime=$("seek").value/100*a.duration;seeking=false});
+$("pp").onclick=$("mpp").onclick=()=>a.paused?a.play():a.pause();
+$("back").onclick=()=>a.currentTime=Math.max(0,a.currentTime-15);
+$("fwd").onclick=()=>a.currentTime=Math.min(a.duration||1e9,a.currentTime+15);
+const speeds=[1,1.25,1.5,2,0.75];let si=0;
+$("speed").onclick=()=>{si=(si+1)%speeds.length;a.playbackRate=speeds[si];$("speed").textContent=speeds[si]+"x"};
+$("pdl").onclick=ev=>cur>-1&&download(eps[cur],ev.target);
+$("close").onclick=()=>{a.pause();$("player").classList.remove("show");cur=-1;render()};
+a.addEventListener("ended",()=>{if(cur<eps.length-1)play(cur+1)}); // plays the next sermon down the list (older)
+
+/* download */
+const safe=s=>s.replace(/[\\/:*?"<>|]+/g," ").trim().slice(0,80)||"sermon";
+async function download(e,btn){
+  const old=btn.textContent;btn.disabled=true;btn.textContent="Downloading…";
+  try{
+    const r=await fetch(e.url);if(!r.ok)throw 0;
+    const b=await r.blob();
+    const l=document.createElement("a");l.href=URL.createObjectURL(b);l.download=safe(e.title)+".mp3";
+    document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),4000);
+    btn.textContent="Saved";
+  }catch(err){
+    window.open(e.url,"_blank","noopener");
+    btn.textContent="Opened in new tab";
+  }
+  setTimeout(()=>{btn.textContent=old;btn.disabled=false},3000);
+}
+
+/* theme */
+const root=document.documentElement,meta=document.querySelector('meta[name=theme-color]');
+const isDark=()=>root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+function paintTheme(){$("themebtn").textContent=isDark()?"☀ Light":"☾ Dark";meta.content=isDark()?"#0a1428":"#053065"}
+{const t=store.get("theme");if(t)root.dataset.theme=t}
+$("themebtn").onclick=()=>{root.dataset.theme=isDark()?"light":"dark";store.set("theme",root.dataset.theme);paintTheme()};
+matchMedia("(prefers-color-scheme:dark)").addEventListener("change",paintTheme);
+paintTheme();
+$("clear").onclick=()=>{$("q").value="";render();$("q").focus()};
+
+/* icons, about, comments, partner */
+const P={
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+  chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  speaker:'<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  chevD:'<path d="m6 9 6 6 6-6"/>',
+  chevU:'<path d="m18 15-6-6-6 6"/>',
+  mail:'<rect width="20" height="14" x="2" y="5" rx="2"/><path d="m22 7-10 7L2 7"/>'
+};
+const svg=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+P[n]+'</svg>';
+document.querySelector("#qAbout .ic").innerHTML=svg("user");
+document.querySelector("#qComm .ic").innerHTML=svg("chat");
+document.querySelector("#qPart .ic").innerHTML=svg("heart");
+
+/* minimize player / fold sermon list */
+const pl=$("player");
+function setMin(v){
+  pl.classList.toggle("min",v);store.set("pmin",v?"1":"0");
+  $("mini").innerHTML=svg(v?"chevU":"chevD");
+  $("mini").setAttribute("aria-label",v?"Expand player":"Minimize player");
+}
+$("mini").onclick=()=>setMin(!pl.classList.contains("min"));
+$("now").onclick=$("pcover").onclick=()=>{if(pl.classList.contains("min"))setMin(false)};
+setMin(store.get("pmin")==="1");
+function setFold(f){
+  $("main").classList.toggle("fold",f);
+  $("fold").innerHTML=svg(f?"chevD":"chevU")+"<span>"+(f?"Show":"Hide")+"</span>";
+  $("fold").setAttribute("aria-expanded",String(!f));
+  $("fold").setAttribute("aria-label",f?"Show sermons":"Hide sermons");
+}
+$("fold").onclick=()=>setFold(!$("main").classList.contains("fold"));
+$("q").addEventListener("input",()=>{if($("q").value&&$("main").classList.contains("fold"))setFold(false)});
+setFold(false);
+
+/* keep the player above the bottom bar */
+const setDock=()=>root.style.setProperty("--dock",$("dock").offsetHeight+"px");
+setDock();addEventListener("resize",setDock);
+
+/* installable app + background playback */
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+const sheet=$("sheet");
+function openSheet(title,build){
+  $("shT").textContent=title;const b=$("shB");b.innerHTML="";build(b);
+  if(!sheet.open)sheet.showModal();
+}
+const stopSpeech=()=>{if("speechSynthesis" in window)speechSynthesis.cancel()};
+$("shX").onclick=()=>sheet.close();
+sheet.addEventListener("close",stopSpeech);
+sheet.addEventListener("click",e=>{if(e.target===sheet)sheet.close()});
+const btn=(cls,icon,label,href)=>{const el=document.createElement(href?"a":"button");el.className=cls;el.innerHTML=svg(icon)+"<span></span>";el.lastChild.textContent=label;if(href){el.href=href;el.target="_blank";el.rel="noopener"}return el};
+
+$("qAbout").onclick=()=>openSheet("Pastor Billmatt Osale",b=>{
+  const im=document.createElement("img");im.src=LOGO;im.alt="";im.className="abt";b.appendChild(im);
+  const p=document.createElement("p");p.textContent=ABOUT;b.appendChild(p);
+  if("speechSynthesis" in window){
+    const r=btn("pbtn","speaker","Read aloud");
+    r.onclick=()=>{
+      if(speechSynthesis.speaking){stopSpeech();r.lastChild.textContent="Read aloud";return}
+      const u=new SpeechSynthesisUtterance(ABOUT);u.onend=()=>r.lastChild.textContent="Read aloud";
+      speechSynthesis.speak(u);r.lastChild.textContent="Stop reading";
+    };
+    b.appendChild(r);
+  }
+});
+
+let disqusLoaded=false;
+function drawComments(){
+  const l=$("cl");l.innerHTML="";
+  let arr=[];try{arr=JSON.parse(store.get("comments")||"[]")}catch(e){}
+  if(!arr.length){l.innerHTML='<p class="note">No comments yet. Be the first to share.</p>';return}
+  arr.slice().reverse().forEach(c=>{
+    const d=document.createElement("div");d.className="cm";
+    const h=document.createElement("b");h.textContent=c.n;
+    const t=document.createElement("small");t.textContent=" · "+new Date(c.t).toLocaleDateString();
+    const p=document.createElement("p");p.textContent=c.x;
+    d.append(h,t,p);l.appendChild(d);
+  });
+}
+$("qComm").onclick=()=>openSheet("Comments",b=>{
+  if(DISQUS_SHORTNAME){
+    b.innerHTML='<div id="disqus_thread"></div>';
+    const cfg=function(){this.page.url=location.href.split("#")[0];this.page.identifier="pastor-billmatt-library"};
+    if(window.DISQUS&&disqusLoaded){DISQUS.reset({reload:true,config:cfg})}
+    else{window.disqus_config=cfg;const s=document.createElement("script");s.src="https://"+DISQUS_SHORTNAME+".disqus.com/embed.js";s.setAttribute("data-timestamp",+new Date());document.head.appendChild(s);disqusLoaded=true}
+    return;
+  }
+  b.innerHTML='<form id="cf" class="cf"><input id="cn" maxlength="40" placeholder="Your name" aria-label="Your name" required><textarea id="ct" maxlength="500" rows="3" placeholder="Share a comment or testimony" aria-label="Comment" required></textarea><button class="pbtn" type="submit" style="margin-top:0"></button></form><p class="note">Comments are saved on this device.</p><div id="cl"></div>';
+  const post=document.querySelector("#cf .pbtn");post.innerHTML=svg("send")+"<span>Post comment</span>";
+  $("cf").onsubmit=e=>{
+    e.preventDefault();
+    let arr=[];try{arr=JSON.parse(store.get("comments")||"[]")}catch(x){}
+    arr.push({n:$("cn").value.trim(),x:$("ct").value.trim(),t:Date.now()});
+    store.set("comments",JSON.stringify(arr.slice(-100)));
+    $("ct").value="";drawComments();
+  };
+  drawComments();
+});
+
+$("qPart").onclick=()=>openSheet("Partner with us",b=>{
+  const p=document.createElement("p");p.textContent=PARTNER.text;b.appendChild(p);
+  if(PARTNER.give)b.appendChild(btn("pbtn","heart","Give or partner online",PARTNER.give));
+  if(PARTNER.whatsapp)b.appendChild(btn("pbtn","chat","WhatsApp "+PARTNER.whatsappNumber,PARTNER.whatsapp));
+  if(PARTNER.email)b.appendChild(btn("pbtn","mail","Send an email","mailto:"+PARTNER.email));
+});
+
+/* start */
+try{seen=JSON.parse(store.get("seen")||"null")}catch(e){seen=null}
+$("q").addEventListener("input",render);
+setupNotifyButton();
+load(true);
+setInterval(()=>load(false),10*60*1000);                 // check for new sermons every 10 minutes
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load(false)});
+</script>
+</body>
+</html>
