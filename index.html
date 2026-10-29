@@ -71,3 +71,311 @@ input[type=search]{-webkit-appearance:none;appearance:none;font:inherit;padding:
 .di[data-cat="spirit"] .bx{color:#8758e8;background:rgba(135,88,232,.13)}
 .di[data-cat="grace"] .bx{color:#13a88a;background:rgba(19,168,138,.13)}
 .di[data-cat="victory"] .bx{color:#e24b4b;background:rgba(226,75,75,.13)}
+.di[data-cat="word"] .bx{color:#0d9bb8;background:rgba(13,155,184,.13)}
+.di[data-cat="other"] .bx{color:#b7791f;background:rgba(183,121,31,.13)}
+.di[data-cat="create"] .bx{color:#0d9bb8;background:rgba(13,155,184,.13)}
+.di[data-cat="manage"] .bx{color:#7c3aed;background:rgba(124,58,237,.13)}
+.di[data-cat^="playlist"] .bx{color:#e64980;background:rgba(230,73,128,.13)}
+.di.on .bx{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+#dock .qb:nth-child(1) .ic{color:#3980f5;background:rgba(57,128,245,.10)}
+#dock .qb:nth-child(2) .ic{color:#9b5de5;background:rgba(155,93,229,.11)}
+#dock .qb:nth-child(3) .ic{color:#e64980;background:rgba(230,73,128,.11)}
+#dock .qb .ic svg.i{width:21px;height:21px;stroke-width:2}
+#dock .qb{transition:transform .18s,color .18s}
+#dock .qb:active{transform:translateY(-2px)}
+#dock .qb:active .ic,#dock .qb:hover .ic{background:currentColor;color:var(--white)}
+#dock .qb:nth-child(1):active .ic,#dock .qb:nth-child(1):hover .ic{background:#3980f5;color:#fff}
+#dock .qb:nth-child(2):active .ic,#dock .qb:nth-child(2):hover .ic{background:#9b5de5;color:#fff}
+#dock .qb:nth-child(3):active .ic,#dock .qb:nth-child(3):hover .ic{background:#e64980;color:#fff}
+#player button svg.i{transition:transform .18s}
+#player button:active svg.i{transform:scale(.9)}
+@media(prefers-reduced-motion:reduce){#dock .qb,#dock .qb .ic,#player button svg.i{transition:none}}
+
+</style>
+</head>
+<body>
+<header><button class="themebtn" id="themebtn" aria-label="Switch between light and dark mode"></button><div class="wrap"><img class="logo" src="logo.jpg" alt="Pastor Billmatt Digital Library"><p>Listen to sermons here, or download them to your phone to hear later. Free for everyone.</p><button id="notify" hidden>Notify me of new sermons</button></div></header>
+<div id="banner"><div class="wrap"><span id="bannerText"></span><button id="bannerBtn">Play</button></div></div>
+<div class="tools"><div class="wrap"><button class="menubtn" id="menu" aria-label="Open categories and playlists" aria-controls="drawer" aria-expanded="false"><span id="menuIc"></span><i class="dot" id="dot" hidden></i></button><div class="sw"><input type="search" id="q" placeholder="Search sermons by title, topic or date" aria-label="Search sermons"><button id="clear" aria-label="Clear search" hidden>✕</button></div><span id="count"></span><button class="foldbtn" id="fold" aria-expanded="true"></button></div><div class="wrap fbar" id="fbar" hidden></div></div>
+<main id="main"><div class="wrap" id="playlistHeader" hidden></div><div class="wrap" id="list"><div class="msg">Loading sermons…</div></div></main>
+<footer>Pastor Billmatt Digital Library · Free to listen and share</footer>
+<div id="scrim"></div>
+<aside id="drawer" aria-label="Categories and playlists" aria-hidden="true"><div class="dh"><img src="logo.jpg" alt=""><div><b>Library menu</b><small id="dsub">Browse sermons and playlists</small></div><button id="dx" aria-label="Close menu">✕</button></div><nav id="dlist"></nav></aside>
+<div id="player" role="region" aria-label="Audio player"><div class="pt"><img id="pcover" src="logo.jpg" alt=""><div id="now"></div><button class="x" id="mpp" aria-label="Play">▶</button><button class="x" id="mini" aria-label="Minimize player"></button><button class="x" id="close" aria-label="Close player">✕</button></div><div class="seek"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="100" value="0" step="0.1" aria-label="Seek"><span id="dur">0:00</span></div><div class="ctl"><button id="speed" aria-label="Playback speed">1x</button><button id="back" aria-label="Back 15 seconds">⟲ 15</button><button id="pp" aria-label="Play">▶</button><button id="fwd" aria-label="Forward 15 seconds">15 ⟳</button><button id="pdl" aria-label="Download this sermon">Save</button></div><audio id="audio" preload="none"></audio><div id="mbar"><i></i></div></div>
+<nav id="dock" aria-label="More"><div class="in"><button class="qb" id="qAbout"><span class="ic"></span>About</button><button class="qb" id="qComm"><span class="ic"></span>Comments</button><button class="qb" id="qPart"><span class="ic"></span>Partner</button></div></nav>
+<dialog id="sheet" aria-labelledby="shT"><div class="sh"><h2 id="shT"></h2><button id="shX" aria-label="Close">✕</button></div><div class="sb" id="shB"></div></dialog>
+<script>
+const FEED="https://anchor.fm/s/1183e0954/podcast/rss",LOGO="logo.jpg";
+const ABOUT="Pastor Billmatt Osale shares messages of faith and encouragement. This digital library brings his sermons together in one place, so you can listen, download and share them for free, wherever you are.";
+const PARTNER={text:"Partner with Pastor Billmatt Osale to keep these messages free and reaching more people. Get in touch to find out how you can support the work.",whatsappNumber:"+234 808 669 0553",whatsapp:"https://wa.me/2348086690553",email:"",give:""};
+const DISQUS_SHORTNAME="";
+const CATS=[
+{id:"faith",name:"Faith",icon:"sprout",k:"faith|believ|trust|obedien|obey|patien|surrender|walk(?:ing)? with|doubt"},
+{id:"prayer",name:"Prayer & Worship",icon:"flame",k:"pray|intercess|fast(?:ing)?\\b|worship|altar|praise|supplicat|devotion"},
+{id:"healing",name:"Healing & Miracles",icon:"pulse",k:"heal|miracle|sick|health|deliver|breakthrough|restor|testimon|wonder"},
+{id:"family",name:"Family & Love",icon:"users",k:"marriage|family|famil|husband|wife|child|parent|couple|love|relationship|youth|mother|father|friend|home\\b|singles?"},
+{id:"money",name:"Giving & Provision",icon:"coins",k:"money|financ|giv|tithe|offering|wealth|prosper|sow|seed|provision|business|increase|blessing|abundan"},
+{id:"purpose",name:"Purpose & Destiny",icon:"target",k:"purpose|destiny|calling|called|vision|plan|season|direction|future|dream|grow|leader|success|divine"},
+{id:"spirit",name:"Holy Spirit",icon:"bolt",k:"holy spirit|spirit|anoint|power|fire|gifts?\\b|glory|presence|tongues"},
+{id:"grace",name:"Grace & Salvation",icon:"gift",k:"grace|salvation|saved|cross|jesus|christ|forgiv|mercy|redeem|born again|gospel|easter|resurrect|sin\\b|repent"},
+{id:"victory",name:"Victory & Hope",icon:"shield",k:"victor|overcom|battle|war|fear|enem|strength|stand|courage|conquer|storm|trial|hope|peace|anxi|struggle|pain|rise"},
+{id:"word",name:"Bible Teaching",icon:"book",k:"word|bible|scripture|study|verse|teaching|book of|psalm|proverb|chapter|genesis|exodus|romans|john|acts|matthew|luke|mark|revelation"}];
+const OTHER={id:"other",name:"Other",icon:"dots"};CATS.forEach(c=>c.re=new RegExp("\\b(?:"+c.k+")","gi"));
+const catById=id=>CATS.find(c=>c.id===id)||OTHER;
+function categorize(e){let best=null,top=0;for(const c of CATS){const s=((e.title.match(c.re)||[]).length)*3+(e.desc.match(c.re)||[]).length;if(s>top){top=s;best=c}}return(best||OTHER).id}
+let activeCat="all",activePlaylistId=null;
+const PROXIES=[u=>u,u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),u=>"https://corsproxy.io/?"+encodeURIComponent(u)];
+const $=id=>document.getElementById(id),a=$("audio");
+let eps=[],cur=-1,seen=null,newIds=new Set();
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* Playlists are saved on this device/browser. */
+let playlists=[];
+let playlistQueue=[],playlistQueueActive=false,playlistQueuePosition=-1;
+function loadPlaylists(){try{const p=JSON.parse(store.get("pbdl_playlists")||"[]");playlists=Array.isArray(p)?p.filter(x=>x&&typeof x.id==="string"&&typeof x.name==="string"&&Array.isArray(x.ids)).map(x=>({id:x.id,name:x.name,ids:[...new Set(x.ids.map(String))]})):[]}catch(e){playlists=[]}}
+function savePlaylists(){store.set("pbdl_playlists",JSON.stringify(playlists))}
+function makeId(){return "pl_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8)}
+function getPlaylist(id){return playlists.find(p=>p.id===id)}
+function playlistEpisodes(p){return p?p.ids.map(id=>eps.findIndex(e=>e.id===id)).filter(i=>i>=0):[]}
+function createPlaylist(addId=null){
+  const name=prompt("Name your new playlist:");
+  if(!name||!name.trim())return null;
+  const p={id:makeId(),name:name.trim().slice(0,70),ids:addId?[String(addId)]:[]};
+  playlists.push(p);savePlaylists();drawCats();render();return p;
+}
+function addToPlaylist(episodeId){
+  const choices=playlists.map((p,i)=>(i+1)+". "+p.name+" ("+p.ids.length+")").join("\n");
+  let pick;
+  if(!playlists.length){const p=createPlaylist(episodeId);if(p)toast("Sermon added to "+p.name);return}
+  const answer=prompt("Add this sermon to which playlist?\n"+choices+"\n\nEnter a number, or 0 to create a new playlist.");
+  if(answer===null)return;
+  const n=Number(answer);
+  if(n===0){const p=createPlaylist(episodeId);if(p)toast("Sermon added to "+p.name);return}
+  if(!Number.isInteger(n)||n<1||n>playlists.length){alert("Please enter a valid playlist number.");return}
+  pick=playlists[n-1];
+  if(pick.ids.includes(String(episodeId))){toast("This sermon is already in "+pick.name);return}
+  pick.ids.push(String(episodeId));savePlaylists();drawCats();render();toast("Added to "+pick.name);
+}
+function removeFromPlaylist(playlistId,episodeId){
+  const p=getPlaylist(playlistId);if(!p)return;
+  p.ids=p.ids.filter(id=>id!==String(episodeId));savePlaylists();drawCats();render();toast("Removed from "+p.name);
+}
+function renamePlaylist(id){
+  const p=getPlaylist(id);if(!p)return;
+  const name=prompt("Rename playlist:",p.name);
+  if(!name||!name.trim())return;
+  p.name=name.trim().slice(0,70);savePlaylists();drawCats();render();managePlaylists();
+}
+function deletePlaylist(id){
+  const p=getPlaylist(id);if(!p)return;
+  if(!confirm('Delete playlist "'+p.name+'"? The sermons themselves will not be deleted.'))return;
+  playlists=playlists.filter(x=>x.id!==id);
+  if(activePlaylistId===id){activePlaylistId=null;playlistQueueActive=false;playlistQueue=[]}
+  savePlaylists();drawCats();render();managePlaylists();
+}
+let toastTimer;
+function toast(message){let el=$("toast");if(!el){el=document.createElement("div");el.id="toast";el.style.cssText="position:fixed;left:50%;bottom:calc(var(--dock,76px) + 125px);transform:translateX(-50%);z-index:40;background:var(--navy);color:#fff;padding:10px 16px;border-radius:999px;box-shadow:0 4px 18px #0003;max-width:90vw;text-align:center;font-size:.88rem";document.body.appendChild(el)}el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,2500)}
+function managePlaylists(){
+  openSheet("Manage playlists",b=>{
+    const create=document.createElement("button");create.className="pbtn";create.textContent="+ Create a playlist";create.onclick=()=>{const p=createPlaylist();if(p)managePlaylists()};b.appendChild(create);
+    if(!playlists.length){const p=document.createElement("p");p.className="note";p.style.marginTop="14px";p.textContent="Your playlists will appear here. Create one, then add sermons using the Add to playlist button.";b.appendChild(p);return}
+    playlists.forEach(p=>{
+      const row=document.createElement("div");row.className="pl-manage-row";
+      const info=document.createElement("div");info.className="pl-name";
+      const name=document.createElement("b");name.textContent=p.name;
+      const small=document.createElement("small");small.textContent=p.ids.length+" sermon"+(p.ids.length===1?"":"s");
+      info.append(name,small);row.appendChild(info);
+      const rename=document.createElement("button");rename.textContent="Rename";rename.onclick=()=>renamePlaylist(p.id);
+      const del=document.createElement("button");del.textContent="Delete";del.onclick=()=>deletePlaylist(p.id);
+      row.append(rename,del);b.appendChild(row);
+    });
+  });
+}
+
+/* RSS feed */
+function parse(xml){
+  const doc=new DOMParser().parseFromString(xml,"text/xml");if(doc.querySelector("parsererror"))throw new Error("bad xml");
+  const chArt=(()=>{const n=[...doc.querySelectorAll("channel > *")].find(x=>x.nodeName==="itunes:image");return n?n.getAttribute("href"):""})();
+  return [...doc.querySelectorAll("item")].map(it=>{
+    const enc=it.querySelector("enclosure"),g=t=>{const n=[...it.children].find(x=>x.nodeName===t);return n?n.textContent.trim():""};
+    const im=[...it.children].find(x=>x.nodeName==="itunes:image"),d=document.createElement("div");d.innerHTML=g("description");
+    return{id:g("guid")||(enc&&enc.getAttribute("url")),title:g("title"),url:enc?enc.getAttribute("url"):"",date:new Date(g("pubDate")),dur:g("itunes:duration"),desc:(d.textContent||"").trim(),img:(im&&im.getAttribute("href"))||chArt||LOGO};
+  }).filter(e=>e.url&&e.id);
+}
+async function fetchFeed(){for(const p of PROXIES){try{const r=await fetch(p(FEED),{cache:"no-store"});if(!r.ok)continue;const t=await r.text();if(t.includes("<item"))return t}catch(e){}}return null}
+function checkNew(list,first){
+  const ids=list.map(e=>e.id);if(seen===null){seen=ids;store.set("seen",JSON.stringify(ids));return}
+  const fresh=list.filter(e=>!seen.includes(e.id));if(!fresh.length)return;
+  fresh.forEach(e=>newIds.add(e.id));$("bannerText").textContent=fresh.length===1?"New sermon: "+fresh[0].title:fresh.length+" new sermons added";$("banner").classList.add("show");
+  $("bannerBtn").onclick=()=>{$("banner").classList.remove("show");play(eps.findIndex(x=>x.id===fresh[0].id))};
+  if(!first)notify(fresh[0].title,fresh.length);seen=ids;store.set("seen",JSON.stringify(ids));
+}
+async function notify(title,n){if(!("Notification"in window)||Notification.permission!=="granted")return;const head=n>1?n+" new sermons":"New sermon",o={body:title,icon:"icon-192.png"};try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(reg)await reg.showNotification(head,o);else new Notification(head,o)}catch(e){}}
+function setupNotifyButton(){const b=$("notify");if(!("Notification"in window)||Notification.permission!=="default")return;b.hidden=false;b.onclick=async()=>{const r=await Notification.requestPermission();b.hidden=true;if(r==="granted")notify("You will be told when a new sermon is added.",1)}}
+async function load(first){
+  if(first)$("list").innerHTML='<div class="msg">Loading sermons…</div>';
+  const xml=await fetchFeed();let list=[];
+  try{if(xml){list=parse(xml);store.set("feed",xml)}else if(first){const c=store.get("feed");if(c)list=parse(c)}}catch(e){}
+  if(!list.length){if(first&&!eps.length){$("list").innerHTML='<div class="msg">Sermons could not be loaded. Check your internet connection and try again.<br><button id="retry">Try again</button></div>';$("retry").onclick=()=>load(true);$("count").textContent=""}return}
+  const changed=!eps.length||list[0].id!==eps[0].id||list.length!==eps.length,playingId=cur>-1?eps[cur].id:null;
+  list.forEach(e=>e.cat=categorize(e));eps=list;cur=playingId?eps.findIndex(e=>e.id===playingId):-1;
+  checkNew(eps,first);if(changed){drawCats();render()}
+}
+
+/* Side menu */
+const drawer=$("drawer"),scrim=$("scrim");
+function openMenu(){drawer.classList.add("open");scrim.classList.add("open");drawer.setAttribute("aria-hidden","false");$("menu").setAttribute("aria-expanded","true");const on=drawer.querySelector(".di.on");if(on)setTimeout(()=>on.scrollIntoView({block:"nearest"}),60)}
+function closeMenu(){drawer.classList.remove("open");scrim.classList.remove("open");drawer.setAttribute("aria-hidden","true");$("menu").setAttribute("aria-expanded","false")}
+function pick(id){activePlaylistId=null;playlistQueueActive=false;playlistQueue=[];activeCat=id;drawCats();render();closeMenu();if($("main").classList.contains("fold"))setFold(false);scrollTo({top:0,behavior:"smooth"})}
+function openPlaylist(id){const p=getPlaylist(id);if(!p)return;activePlaylistId=id;activeCat="all";drawCats();render();closeMenu();if($("main").classList.contains("fold"))setFold(false);scrollTo({top:0,behavior:"smooth"})}
+function drawCats(){
+  const counts={};eps.forEach(e=>counts[e.cat]=(counts[e.cat]||0)+1);
+  if(activeCat!=="all"&&!counts[activeCat])activeCat="all";
+  const L=$("dlist");L.innerHTML="";
+  const lab=document.createElement("div");lab.className="dlab";lab.textContent="Topics";
+  const add=(c,n,action,active)=>{
+    const b=document.createElement("button");b.className="di"+(active?" on":"");b.dataset.cat=c.id;
+    b.innerHTML='<span class="bx">'+svg(c.icon)+'</span><span class="n"></span><small></small>';b.children[1].textContent=c.name;b.children[2].textContent=n;b.onclick=action;L.appendChild(b);
+  };
+  add({id:"all",name:"All sermons",icon:"grid"},eps.length,()=>pick("all"),!activePlaylistId&&activeCat==="all");
+  const sep=document.createElement("div");sep.className="dsep";L.append(sep,lab);
+  [...CATS,OTHER].forEach(c=>{if(counts[c.id])add(c,counts[c.id],()=>pick(c.id),!activePlaylistId&&c.id===activeCat)});
+  const sep2=document.createElement("div");sep2.className="dsep";L.appendChild(sep2);
+  const plab=document.createElement("div");plab.className="dlab";plab.textContent="Your playlists";L.appendChild(plab);
+  const newBtn=document.createElement("button");newBtn.className="di";newBtn.dataset.cat="create";newBtn.innerHTML='<span class="bx">'+svg("plus")+'</span><span class="n">Create playlist</span><small>＋</small>';newBtn.onclick=()=>{const p=createPlaylist();if(p)openPlaylist(p.id)};L.appendChild(newBtn);
+  playlists.forEach(p=>add({id:p.id,name:p.name,icon:"playlist"},p.ids.length,()=>openPlaylist(p.id),activePlaylistId===p.id));
+  const manage=document.createElement("button");manage.className="di";manage.dataset.cat="manage";manage.innerHTML='<span class="bx">'+svg("settings")+'</span><span class="n">Manage playlists</span><small>›</small>';manage.onclick=()=>{closeMenu();managePlaylists()};L.appendChild(manage);
+  const act=!activePlaylistId&&activeCat!=="all",c=catById(activeCat);$("dot").hidden=!(act||activePlaylistId);$("dsub").textContent=activePlaylistId?"Playlist: "+(getPlaylist(activePlaylistId)?.name||""):act?"Showing: "+c.name:"Browse sermons and playlists";
+  const fb=$("fbar");fb.hidden=!(act||activePlaylistId);fb.innerHTML="";
+  if(activePlaylistId){const p=getPlaylist(activePlaylistId);const x=document.createElement("button");x.className="fp";x.innerHTML=svg("playlist")+'<span></span><b>✕</b>';x.children[1].textContent=p?p.name:"Playlist";x.onclick=()=>{activePlaylistId=null;playlistQueueActive=false;playlistQueue=[];drawCats();render()};fb.appendChild(x)}
+  else if(act){const p=document.createElement("button");p.className="fp";p.setAttribute("aria-label","Clear category filter: "+c.name);p.innerHTML=svg(c.icon)+"<span></span><b>✕</b>";p.children[1].textContent=c.name;p.onclick=()=>pick("all");fb.appendChild(p)}
+}
+$("menu").onclick=openMenu;$("dx").onclick=closeMenu;scrim.onclick=closeMenu;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&drawer.classList.contains("open"))closeMenu()});
+{let sx=0,sy=0,edge=false;addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;edge=sx<16&&!drawer.classList.contains("open")},{passive:true});addEventListener("touchend",e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=Math.abs(t.clientY-sy);if(dy>60||Math.abs(dx)<70)return;if(edge&&dx>0)openMenu();else if(drawer.classList.contains("open")&&dx<0)closeMenu()},{passive:true})}
+
+/* Sermon list + playlist page */
+const fmtDate=d=>isNaN(d)?"":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+const fmtDur=s=>{if(!s)return"";if(String(s).includes(":"))return String(s).replace(/^00:/,"");const n=+s;if(!n)return"";const h=Math.floor(n/3600),m=Math.floor(n%3600/60);return(h?h+" hr ":"")+m+" min"};
+function renderPlaylistHeader(){
+  const h=$("playlistHeader");h.innerHTML="";
+  if(!activePlaylistId){h.hidden=true;return}
+  const p=getPlaylist(activePlaylistId);if(!p){activePlaylistId=null;h.hidden=true;return}
+  h.hidden=false;h.className="wrap pl-head";
+  const title=document.createElement("h2");title.textContent=p.name;
+  const ids=playlistEpisodes(p);const info=document.createElement("p");info.textContent=ids.length+" available sermon"+(ids.length===1?"":"s")+" · Saved on this device";
+  const actions=document.createElement("div");actions.className="pl-actions";
+  const playAll=document.createElement("button");playAll.textContent="▶ Play playlist";playAll.disabled=!ids.length;playAll.onclick=()=>playPlaylist(p.id);
+  const manage=document.createElement("button");manage.className="secondary";manage.textContent="Manage";manage.onclick=()=>managePlaylists();
+  const back=document.createElement("button");back.className="secondary";back.textContent="All sermons";back.onclick=()=>{activePlaylistId=null;playlistQueueActive=false;playlistQueue=[];drawCats();render()};
+  actions.append(playAll,manage,back);h.append(title,info,actions);
+}
+function render(){
+  renderPlaylistHeader();
+  const q=$("q").value.trim().toLowerCase(),words=q.split(/\s+/).filter(Boolean);
+  let source=eps.map((e,i)=>({e,i}));
+  if(activePlaylistId){const p=getPlaylist(activePlaylistId);const order=p?p.ids:[];source=order.map(id=>{const i=eps.findIndex(e=>e.id===id);return i>=0?{e:eps[i],i}:null}).filter(Boolean)}
+  const list=source.filter(({e})=>{if(!activePlaylistId&&activeCat!=="all"&&e.cat!==activeCat)return false;const hay=(e.title+" "+e.desc+" "+fmtDate(e.date)+" "+catById(e.cat).name).toLowerCase();return words.every(w=>hay.includes(w))});
+  $("clear").hidden=!q;$("count").textContent=activePlaylistId?list.length+" in playlist":list.length+" of "+eps.length;
+  if(!list.length){$("list").innerHTML='<div class="msg">'+(activePlaylistId?'This playlist is empty or no sermons match your search. Add sermons from All sermons.':'No sermons match your search. Try fewer words.')+'</div>';return}
+  $("list").innerHTML="";const playing=cur>-1&&!a.paused;
+  for(const {e,i} of list){
+    const row=document.createElement("div");row.className="ep"+(i===cur?" on":"");
+    row.innerHTML='<button class="cover"><img alt="" loading="lazy"><span></span></button><div class="body"><h2 class="t"></h2><div class="m"></div><div class="tag"></div><div class="playlist-actions"><button class="dl download-btn">Download</button><button class="dl playlist-btn"></button></div></div>';
+    const img=row.querySelector("img");img.src=e.img;img.onerror=()=>{img.onerror=null;img.src=LOGO};
+    row.querySelector(".cover span").textContent=(i===cur&&playing)?"❚❚":"▶";row.querySelector(".cover").setAttribute("aria-label",(i===cur&&playing?"Pause ":"Play ")+e.title);row.querySelector(".cover").onclick=()=>play(i);
+    const t=row.querySelector(".t");if(newIds.has(e.id)){const n=document.createElement("span");n.className="new";n.textContent="NEW";t.appendChild(n)}t.appendChild(document.createTextNode(e.title));
+    row.querySelector(".m").textContent=[fmtDate(e.date),fmtDur(e.dur)].filter(Boolean).join(" · ");
+    const c=catById(e.cat),tg=row.querySelector(".tag");tg.innerHTML=svg(c.icon)+"<span></span>";tg.lastChild.textContent=c.name;
+    row.querySelector(".download-btn").onclick=ev=>download(e,ev.target);
+    const pb=row.querySelector(".playlist-btn");
+    if(activePlaylistId){pb.textContent="Remove from playlist";pb.onclick=()=>removeFromPlaylist(activePlaylistId,e.id)}
+    else{pb.textContent="+ Add to playlist";pb.onclick=()=>addToPlaylist(e.id)}
+    $("list").appendChild(row);
+  }
+}
+function playPlaylist(id){
+  const p=getPlaylist(id);if(!p)return;
+  const ids=p.ids.filter(id=>eps.some(e=>e.id===id));
+  if(!ids.length){toast("This playlist has no available sermons yet.");return}
+  activePlaylistId=id;activeCat="all";playlistQueue=ids.slice();playlistQueueActive=true;playlistQueuePosition=0;
+  drawCats();render();closeMenu();play(eps.findIndex(e=>e.id===playlistQueue[0]));
+}
+
+/* Audio player */
+const mmss=s=>{if(!isFinite(s))return"0:00";s=Math.floor(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,"0");return h?h+":"+String(m).padStart(2,"0")+":"+x:m+":"+x};
+function play(i){
+  if(i<0||!eps[i])return;
+  if(playlistQueueActive){const pos=playlistQueue.indexOf(eps[i].id);if(pos>=0)playlistQueuePosition=pos;else{playlistQueueActive=false;playlistQueue=[];playlistQueuePosition=-1}}
+  if(i===cur){if(a.paused)a.play().catch(()=>{});else a.pause();return}
+  cur=i;const e=eps[i];a.src=e.url;a.play().catch(()=>{});
+  $("now").textContent=e.title;$("pcover").src=e.img;$("pcover").onerror=()=>{$("pcover").src=LOGO};$("player").classList.add("show");
+  if("mediaSession"in navigator&&"MediaMetadata"in window){
+    const ms=navigator.mediaSession;ms.metadata=new MediaMetadata({title:e.title,artist:"Pastor Billmatt",album:"Pastor Billmatt Digital Library",artwork:[{src:e.img,sizes:"512x512"},{src:"icon-512.png",sizes:"512x512",type:"image/png"}]});
+    const set=(n,f)=>{try{ms.setActionHandler(n,f)}catch(x){}};
+    set("play",()=>a.play());set("pause",()=>a.pause());set("seekbackward",()=>{a.currentTime=Math.max(0,a.currentTime-15)});set("seekforward",()=>{a.currentTime=Math.min(a.duration||1e9,a.currentTime+15)});set("seekto",d=>{if(d.seekTime!=null)a.currentTime=d.seekTime});
+    set("previoustrack",()=>{if(playlistQueueActive&&playlistQueuePosition>0){playlistQueuePosition--;play(eps.findIndex(e=>e.id===playlistQueue[playlistQueuePosition]))}else if(cur>0)play(cur-1)});
+    set("nexttrack",()=>nextTrack());
+  }
+  render();
+}
+function nextTrack(){
+  if(playlistQueueActive){
+    if(playlistQueuePosition<playlistQueue.length-1){playlistQueuePosition++;const idx=eps.findIndex(e=>e.id===playlistQueue[playlistQueuePosition]);if(idx>=0){play(idx);return}}
+    playlistQueueActive=false;playlistQueue=[];playlistQueuePosition=-1;toast("Playlist finished.");return;
+  }
+  if(cur<eps.length-1)play(cur+1);
+}
+function sync(){const p=!a.paused;for(const id of ["pp","mpp"]){$(id).textContent=p?"❚❚":"▶";$(id).setAttribute("aria-label",p?"Pause":"Play")}if("mediaSession"in navigator)navigator.mediaSession.playbackState=p?"playing":"paused";render()}
+["play","pause"].forEach(ev=>a.addEventListener(ev,sync));
+a.addEventListener("ended",()=>{if(playlistQueueActive){nextTrack();return}if(cur<eps.length-1)play(cur+1);else sync()});
+a.addEventListener("timeupdate",()=>{$("cur").textContent=mmss(a.currentTime);if(a.duration){$("dur").textContent=mmss(a.duration);const pc=a.currentTime/a.duration*100;if(!seeking)$("seek").value=pc;$("mbar").firstChild.style.width=pc+"%";if("mediaSession"in navigator&&navigator.mediaSession.setPositionState)try{navigator.mediaSession.setPositionState({duration:a.duration,playbackRate:a.playbackRate,position:Math.min(a.currentTime,a.duration)})}catch(x){}}});
+let seeking=false;$("seek").addEventListener("input",()=>{seeking=true;if(a.duration)$("cur").textContent=mmss($("seek").value/100*a.duration)});$("seek").addEventListener("change",()=>{if(a.duration)a.currentTime=$("seek").value/100*a.duration;seeking=false});
+$("pp").onclick=$("mpp").onclick=()=>a.paused?a.play().catch(()=>{}):a.pause();$("back").onclick=()=>a.currentTime=Math.max(0,a.currentTime-15);$("fwd").onclick=()=>a.currentTime=Math.min(a.duration||1e9,a.currentTime+15);
+const speeds=[1,1.25,1.5,2,.75];let si=0;$("speed").onclick=()=>{si=(si+1)%speeds.length;a.playbackRate=speeds[si];$("speed").textContent=speeds[si]+"x"};
+$("pdl").onclick=ev=>cur>-1&&download(eps[cur],ev.target);
+$("close").onclick=()=>{a.pause();$("player").classList.remove("show");cur=-1;playlistQueueActive=false;playlistQueue=[];playlistQueuePosition=-1;render()};
+
+/* Downloads */
+const safe=s=>s.replace(/[\\/:*?"<>|]+/g," ").trim().slice(0,80)||"sermon";
+async function download(e,btn){const old=btn.textContent;btn.disabled=true;btn.textContent="Downloading…";try{const r=await fetch(e.url);if(!r.ok)throw 0;const b=await r.blob(),l=document.createElement("a");l.href=URL.createObjectURL(b);l.download=safe(e.title)+".mp3";document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),4000);btn.textContent="Saved"}catch(err){window.open(e.url,"_blank","noopener");btn.textContent="Opened in new tab"}setTimeout(()=>{btn.textContent=old;btn.disabled=false},3000)}
+
+/* Theme */
+const root=document.documentElement,meta=document.querySelector('meta[name=theme-color]'),isDark=()=>root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+function paintTheme(){$("themebtn").textContent=isDark()?"☀ Light":"☾ Dark";meta.content=isDark()?"#0a1428":"#053065"}
+{const t=store.get("theme");if(t)root.dataset.theme=t}
+$("themebtn").onclick=()=>{root.dataset.theme=isDark()?"light":"dark";store.set("theme",root.dataset.theme);paintTheme()};
+if(matchMedia("(prefers-color-scheme:dark)").addEventListener)matchMedia("(prefers-color-scheme:dark)").addEventListener("change",paintTheme);
+paintTheme();$("clear").onclick=()=>{$("q").value="";render();$("q").focus()};
+
+/* Icons and bottom sheets */
+const P={
+user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',speaker:'<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',chevD:'<path d="m6 9 6 6 6-6"/>',chevU:'<path d="m18 15-6-6-6 6"/>',mail:'<rect width="20" height="14" x="2" y="5" rx="2"/><path d="m22 7-10 7L2 7"/>',menu:'<path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="2.2"/><rect x="14" y="3" width="7" height="7" rx="2.2"/><rect x="3" y="14" width="7" height="7" rx="2.2"/><rect x="14" y="14" width="7" height="7" rx="2.2"/>',sprout:'<path d="M7 21h10M12 21V11"/><path d="M12 11c0-4 3-6 8-6 0 4-3 6-8 6Z"/><path d="M12 14c0-3-2-5-7-5 0 3 2 5 7 5Z"/>',flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>',pulse:'<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/><path d="M3.2 12h6.3l.5-1 2 4.5 2-7 1.5 3.5h5.3"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',coins:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c-.5-1-1.5-1.5-3-1.5s-3 .8-3 2 1.2 1.7 3 2 3 .8 3 2-1.5 2-3 2-2.5-.5-3-1.5"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',bolt:'<path d="M13 2 3 14h9l-1 8 10-12h-9Z"/>',gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',book:'<path d="M2 4h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 4h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/>',dots:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',playlist:'<path d="M4 6h10M4 11h10M4 16h6" stroke-linecap="round"/><circle cx="18" cy="16" r="4"/><path d="M18 14v4m-2-2h4" stroke-linecap="round"/>',settings:'<circle cx="12" cy="12" r="3.2"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.9Z"/>'
+};
+const svg=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+(P[n]||P.dots)+'</svg>';
+$("menuIc").innerHTML=svg("menu");document.querySelector("#qAbout .ic").innerHTML=svg("user");document.querySelector("#qComm .ic").innerHTML=svg("chat");document.querySelector("#qPart .ic").innerHTML=svg("heart");
+const pl=$("player");
+function setMin(v){pl.classList.toggle("min",v);store.set("pmin",v?"1":"0");$("mini").innerHTML=svg(v?"chevU":"chevD");$("mini").setAttribute("aria-label",v?"Expand player":"Minimize player")}
+$("mini").onclick=()=>setMin(!pl.classList.contains("min"));$("now").onclick=$("pcover").onclick=()=>{if(pl.classList.contains("min"))setMin(false)};setMin(store.get("pmin")==="1");
+function setFold(f){$("main").classList.toggle("fold",f);$("fold").innerHTML=svg(f?"chevD":"chevU")+"<span>"+(f?"Show":"Hide")+"</span>";$("fold").setAttribute("aria-expanded",String(!f));$("fold").setAttribute("aria-label",f?"Show sermons":"Hide sermons")}
+$("fold").onclick=()=>setFold(!$("main").classList.contains("fold"));$("q").addEventListener("input",()=>{if($("q").value&&$("main").classList.contains("fold"))setFold(false)});setFold(false);
+const setDock=()=>root.style.setProperty("--dock",$("dock").offsetHeight+"px");setDock();addEventListener("resize",setDock);
+if("serviceWorker"in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(()=>{});
+const sheet=$("sheet");
+function openSheet(title,build){$("shT").textContent=title;const b=$("shB");b.innerHTML="";build(b);if(!sheet.open)sheet.showModal()}
+const stopSpeech=()=>{if("speechSynthesis"in window)speechSynthesis.cancel()};$("shX").onclick=()=>sheet.close();sheet.addEventListener("close",stopSpeech);sheet.addEventListener("click",e=>{if(e.target===sheet)sheet.close()});
+const btn=(cls,icon,label,href)=>{const el=document.createElement(href?"a":"button");el.className=cls;el.innerHTML=svg(icon)+"<span></span>";el.lastChild.textContent=label;if(href){el.href=href;el.target="_blank";el.rel="noopener"}return el};
+$("qAbout").onclick=()=>openSheet("Pastor Billmatt Osale",b=>{const im=document.createElement("img");im.src=LOGO;im.alt="";im.className="abt";b.appendChild(im);const p=document.createElement("p");p.textContent=ABOUT;b.appendChild(p);if("speechSynthesis"in window){const r=btn("pbtn","speaker","Read aloud");r.onclick=()=>{if(speechSynthesis.speaking){stopSpeech();r.lastChild.textContent="Read aloud";return}const u=new SpeechSynthesisUtterance(ABOUT);u.onend=()=>r.lastChild.textContent="Read aloud";speechSynthesis.speak(u);r.lastChild.textContent="Stop reading"};b.appendChild(r)}});
+let disqusLoaded=false;
+function drawComments(){const l=$("cl");l.innerHTML="";let arr=[];try{arr=JSON.parse(store.get("comments")||"[]")}catch(e){}if(!arr.length){l.innerHTML='<p class="note">No comments yet. Be the first to share.</p>';return}arr.slice().reverse().forEach(c=>{const d=document.createElement("div");d.className="cm";const h=document.createElement("b");h.textContent=c.n;const t=document.createElement("small");t.textContent=" · "+new Date(c.t).toLocaleDateString();const p=document.createElement("p");p.textContent=c.x;d.append(h,t,p);l.appendChild(d)})}
+$("qComm").onclick=()=>openSheet("Comments",b=>{
+  if(DISQUS_SHORTNAME){b.innerHTML='<div id="disqus_thread"></div>';const cfg=function(){this.page.url=location.href.split("#")[0];this.page.identifier="pastor-billmatt-library"};if(window.DISQUS&&disqusLoaded)DISQUS.reset({reload:true,config:cfg});else{window.disqus_config=cfg;const s=document.createElement("script");s.src="https://"+DISQUS_SHORTNAME+".disqus.com/embed.js";s.setAttribute("data-timestamp",+new Date());document.head.appendChild(s);disqusLoaded=true}return}
+  b.innerHTML='<form id="cf" class="cf"><input id="cn" maxlength="40" placeholder="Your name" aria-label="Your name" required><textarea id="ct" maxlength="500" rows="3" placeholder="Share a comment or testimony" aria-label="Comment" required></textarea><button class="pbtn" type="submit" style="margin-top:0"></button></form><p class="note">Comments are saved on this device.</p><div id="cl"></div>';const post=document.querySelector("#cf .pbtn");post.innerHTML=svg("send")+"<span>Post comment</span>";
+  $("cf").onsubmit=e=>{e.preventDefault();let arr=[];try{arr=JSON.parse(store.get("comments")||"[]")}catch(x){}arr.push({n:$("cn").value.trim(),x:$("ct").value.trim(),t:Date.now()});store.set("comments",JSON.stringify(arr.slice(-100)));$("ct").value="";drawComments()};drawComments();
+});
+$("qPart").onclick=()=>openSheet("Partner with us",b=>{const p=document.createElement("p");p.textContent=PARTNER.text;b.appendChild(p);if(PARTNER.give)b.appendChild(btn("pbtn","heart","Give or partner online",PARTNER.give));if(PARTNER.whatsapp)b.appendChild(btn("pbtn","chat","WhatsApp "+PARTNER.whatsappNumber,PARTNER.whatsapp));if(PARTNER.email)b.appendChild(btn("pbtn","mail","Send an email","mailto:"+PARTNER.email))});
+try{seen=JSON.parse(store.get("seen")||"null")}catch(e){seen=null}
+loadPlaylists();$("q").addEventListener("input",render);setupNotifyButton();load(true);setInterval(()=>load(false),10*60*1000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load(false)});
+</script>
+</body>
+</html>
