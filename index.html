@@ -100,6 +100,18 @@ input[type=search]{-webkit-appearance:none;appearance:none;font:inherit;padding:
 @keyframes glow{0%,100%{box-shadow:0 0 18px 4px rgba(57,128,245,.6),0 0 46px 10px rgba(155,93,229,.35)}50%{box-shadow:0 0 30px 8px rgba(230,73,128,.6),0 0 70px 18px rgba(57,128,245,.4)}}
 @media(prefers-reduced-motion:reduce){.orb .ring,.orb .orbimg{animation:none}}
 
+/* Floating minimized player */
+#player.min{left:auto;right:12px;bottom:calc(var(--dock,76px) + 14px);width:auto;max-width:none;margin:0;padding:6px 8px 6px 6px;border-radius:999px;z-index:12;touch-action:none;box-shadow:0 8px 26px rgba(5,48,101,.5),0 0 22px rgba(57,128,245,.45)}
+#player.min:not(.show){visibility:hidden;opacity:0;pointer-events:none}
+#player.min .pt{gap:4px}
+#player.min #now{display:none}
+#player.min #pcover{width:46px;height:46px;border-radius:50%;cursor:grab;touch-action:none;border:2px solid rgba(255,255,255,.7)}
+#player.min.playing #pcover{animation:spin 8s linear infinite}
+#player.min #mpp{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#fff;color:var(--navy);font-size:1rem;padding:0;opacity:1}
+#player.min .x{padding:4px 7px}
+#player.min #mbar{display:none}
+@media(prefers-reduced-motion:reduce){#player.min.playing #pcover{animation:none}}
+
 </style>
 </head>
 <body>
@@ -335,7 +347,7 @@ function nextTrack(){
   }
   if(cur<eps.length-1)play(cur+1);
 }
-function sync(){const p=!a.paused;for(const id of ["pp","mpp"]){$(id).textContent=p?"❚❚":"▶";$(id).setAttribute("aria-label",p?"Pause":"Play")}if("mediaSession"in navigator)navigator.mediaSession.playbackState=p?"playing":"paused";render()}
+function sync(){const p=!a.paused;$("player").classList.toggle("playing",p);for(const id of ["pp","mpp"]){$(id).textContent=p?"❚❚":"▶";$(id).setAttribute("aria-label",p?"Pause":"Play")}if("mediaSession"in navigator)navigator.mediaSession.playbackState=p?"playing":"paused";render()}
 ["play","pause"].forEach(ev=>a.addEventListener(ev,sync));
 a.addEventListener("ended",()=>{if(playlistQueueActive){nextTrack();return}if(cur<eps.length-1)play(cur+1);else sync()});
 a.addEventListener("timeupdate",()=>{$("cur").textContent=mmss(a.currentTime);if(a.duration){$("dur").textContent=mmss(a.duration);const pc=a.currentTime/a.duration*100;if(!seeking)$("seek").value=pc;$("mbar").firstChild.style.width=pc+"%";if("mediaSession"in navigator&&navigator.mediaSession.setPositionState)try{navigator.mediaSession.setPositionState({duration:a.duration,playbackRate:a.playbackRate,position:Math.min(a.currentTime,a.duration)})}catch(x){}}});
@@ -364,8 +376,26 @@ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 
 const svg=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+(P[n]||P.dots)+'</svg>';
 $("menuIc").innerHTML=svg("menu");document.querySelector("#qAbout .ic").innerHTML=svg("user");document.querySelector("#qComm .ic").innerHTML=svg("chat");document.querySelector("#qPart .ic").innerHTML=svg("heart");
 const pl=$("player");
-function setMin(v){pl.classList.toggle("min",v);store.set("pmin",v?"1":"0");$("mini").innerHTML=svg(v?"chevU":"chevD");$("mini").setAttribute("aria-label",v?"Expand player":"Minimize player")}
-$("mini").onclick=()=>setMin(!pl.classList.contains("min"));$("now").onclick=$("pcover").onclick=()=>{if(pl.classList.contains("min"))setMin(false)};setMin(store.get("pmin")==="1");
+P.expand='<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+function place(x,y){x=Math.min(Math.max(0,x),innerWidth-pl.offsetWidth);y=Math.min(Math.max(0,y),innerHeight-pl.offsetHeight);pl.style.left=x+"px";pl.style.top=y+"px";pl.style.right="auto";pl.style.bottom="auto"}
+function resetPos(){pl.style.left=pl.style.top=pl.style.right=pl.style.bottom=""}
+function restorePos(){try{const p=JSON.parse(store.get("ppos")||"null");if(p&&isFinite(p.x)&&isFinite(p.y))place(p.x,p.y)}catch(e){}}
+let autoRef=0;
+function setMin(v,auto){autoRef=scrollY;pl.classList.toggle("min",v);if(!auto)store.set("pmin",v?"1":"0");$("mini").innerHTML=svg(v?"expand":"chevD");$("mini").setAttribute("aria-label",v?"Expand player":"Minimize player");if(v)restorePos();else resetPos()}
+$("mini").onclick=()=>setMin(!pl.classList.contains("min"));
+{let d=null,moved=false;const cv=$("pcover");
+cv.addEventListener("pointerdown",e=>{if(!pl.classList.contains("min"))return;const r=pl.getBoundingClientRect();d={dx:e.clientX-r.left,dy:e.clientY-r.top,sx:e.clientX,sy:e.clientY};moved=false;try{cv.setPointerCapture(e.pointerId)}catch(x){}});
+cv.addEventListener("pointermove",e=>{if(!d)return;if(!moved&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)<6)return;moved=true;place(e.clientX-d.dx,e.clientY-d.dy)});
+const end=()=>{if(d&&moved)store.set("ppos",JSON.stringify({x:parseFloat(pl.style.left),y:parseFloat(pl.style.top)}));d=null};
+cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+cv.addEventListener("click",()=>{if(moved){moved=false;return}if(pl.classList.contains("min"))setMin(false)});
+$("now").onclick=()=>{if(pl.classList.contains("min"))setMin(false)};
+addEventListener("resize",()=>{if(pl.classList.contains("min")&&pl.style.left)place(parseFloat(pl.style.left),parseFloat(pl.style.top))})}
+setMin(store.get("pmin")==="1");
+/* Minimize while playing: swipe the player down, or scroll the list */
+{let y0=null;pl.addEventListener("touchstart",e=>{if(pl.classList.contains("min")||e.target.closest("input,button"))return;y0=e.touches[0].clientY},{passive:true});
+pl.addEventListener("touchend",e=>{if(y0===null)return;const dy=e.changedTouches[0].clientY-y0;y0=null;if(dy>50)setMin(true)},{passive:true})}
+addEventListener("scroll",()=>{if(pl.classList.contains("min")||a.paused||!pl.classList.contains("show")){autoRef=scrollY;return}if(Math.abs(scrollY-autoRef)>120)setMin(true,true)},{passive:true});
 function setFold(f){$("main").classList.toggle("fold",f);$("fold").innerHTML=svg(f?"chevD":"chevU")+"<span>"+(f?"Show":"Hide")+"</span>";$("fold").setAttribute("aria-expanded",String(!f));$("fold").setAttribute("aria-label",f?"Show sermons":"Hide sermons")}
 $("fold").onclick=()=>setFold(!$("main").classList.contains("fold"));$("q").addEventListener("input",()=>{if($("q").value&&$("main").classList.contains("fold"))setFold(false)});setFold(false);
 const setDock=()=>root.style.setProperty("--dock",$("dock").offsetHeight+"px");setDock();addEventListener("resize",setDock);
