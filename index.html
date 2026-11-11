@@ -91,10 +91,19 @@ input[type=search]{-webkit-appearance:none;appearance:none;font:inherit;padding:
 #player button:active svg.i{transform:scale(.9)}
 @media(prefers-reduced-motion:reduce){#dock .qb,#dock .qb .ic,#player button svg.i{transition:none}}
 
+/* Glowing rotating logo + sermon visualizer */
+.orb{position:relative;width:min(280px,76vw);aspect-ratio:1;margin:0 auto;display:grid;place-items:center}
+#viz{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.orb .ring{position:absolute;width:62%;aspect-ratio:1;border-radius:50%;background:conic-gradient(#3980f5,#9b5de5,#e64980,#e58a10,#10a66a,#3980f5);animation:spin 8s linear infinite,glow 3s ease-in-out infinite}
+.orb .orbimg{position:relative;width:58%;aspect-ratio:1;border-radius:50%;object-fit:cover;background:#0a3f85;animation:spin 24s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 18px 4px rgba(57,128,245,.6),0 0 46px 10px rgba(155,93,229,.35)}50%{box-shadow:0 0 30px 8px rgba(230,73,128,.6),0 0 70px 18px rgba(57,128,245,.4)}}
+@media(prefers-reduced-motion:reduce){.orb .ring,.orb .orbimg{animation:none}}
+
 </style>
 </head>
 <body>
-<header><button class="themebtn" id="themebtn" aria-label="Switch between light and dark mode"></button><div class="wrap"><img class="logo" src="logo.jpg" alt="Pastor Billmatt Digital Library"><p>Listen to sermons here, or download them to your phone to hear later. Free for everyone.</p><button id="notify" hidden>Notify me of new sermons</button></div></header>
+<header><button class="themebtn" id="themebtn" aria-label="Switch between light and dark mode"></button><div class="wrap"><div class="orb"><canvas id="viz"></canvas><div class="ring"></div><img class="orbimg" src="logo.jpg" alt="Pastor Billmatt Digital Library"></div><p>Listen to sermons here, or download them to your phone to hear later. Free for everyone.</p><button id="notify" hidden>Notify me of new sermons</button></div></header>
 <div id="banner"><div class="wrap"><span id="bannerText"></span><button id="bannerBtn">Play</button></div></div>
 <div class="tools"><div class="wrap"><button class="menubtn" id="menu" aria-label="Open categories and playlists" aria-controls="drawer" aria-expanded="false"><span id="menuIc"></span><i class="dot" id="dot" hidden></i></button><div class="sw"><input type="search" id="q" placeholder="Search sermons by title, topic or date" aria-label="Search sermons"><button id="clear" aria-label="Clear search" hidden>✕</button></div><span id="count"></span><button class="foldbtn" id="fold" aria-expanded="true"></button></div><div class="wrap fbar" id="fbar" hidden></div></div>
 <main id="main"><div class="wrap" id="playlistHeader" hidden></div><div class="wrap" id="list"><div class="msg">Loading sermons…</div></div></main>
@@ -376,6 +385,21 @@ $("qComm").onclick=()=>openSheet("Comments",b=>{
 $("qPart").onclick=()=>openSheet("Partner with us",b=>{const p=document.createElement("p");p.textContent=PARTNER.text;b.appendChild(p);if(PARTNER.give)b.appendChild(btn("pbtn","heart","Give or partner online",PARTNER.give));if(PARTNER.whatsapp)b.appendChild(btn("pbtn","chat","WhatsApp "+PARTNER.whatsappNumber,PARTNER.whatsapp));if(PARTNER.email)b.appendChild(btn("pbtn","mail","Send an email","mailto:"+PARTNER.email))});
 try{seen=JSON.parse(store.get("seen")||"null")}catch(e){seen=null}
 loadPlaylists();$("q").addEventListener("input",render);setupNotifyButton();load(true);setInterval(()=>load(false),10*60*1000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load(false)});
+
+/* Logo visualizer: colorful bars around the logo while a sermon plays */
+(()=>{const cv=$("viz"),ctx=cv.getContext("2d"),N=72;let S=0,amp=0,raf=0;
+function size(){const d=devicePixelRatio||1;S=cv.getBoundingClientRect().width;cv.width=cv.height=S*d;ctx.setTransform(d,0,0,d,0,0)}
+function frame(t){const on=!a.paused&&!a.ended;amp+=((on?1:0)-amp)*.06;ctx.clearRect(0,0,S,S);
+const c=S/2,r0=S*.345,mx=S*.14;ctx.lineCap="round";ctx.lineWidth=Math.max(2,S*.012);
+for(let i=0;i<N;i++){const ang=i/N*Math.PI*2+t/6000,
+w=Math.sin(t/180+i*.7)*.5+Math.sin(t/310+i*1.9)*.3+Math.sin(t/90+i*.37)*.2,
+h=mx*(.08+amp*(.5+.5*w)*(.55+.45*Math.sin(t/700+i*.2))),
+col="hsl("+((i/N*360+t/20)%360)+",95%,60%)",cs=Math.cos(ang),sn=Math.sin(ang);
+ctx.strokeStyle=ctx.shadowColor=col;ctx.shadowBlur=10;ctx.beginPath();
+ctx.moveTo(c+cs*r0,c+sn*r0);ctx.lineTo(c+cs*(r0+h),c+sn*(r0+h));ctx.stroke()}
+if(amp>.01||on)raf=requestAnimationFrame(frame);else{raf=0;ctx.clearRect(0,0,S,S)}}
+const start=()=>{if(!raf)raf=requestAnimationFrame(frame)};
+["play","playing"].forEach(e=>a.addEventListener(e,start));size();addEventListener("resize",size)})();
 </script>
 </body>
 </html>
